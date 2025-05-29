@@ -5,16 +5,15 @@ on:
     branches:
       - master
     paths:
-      - 'frontend/**'
+      - 'backend/**'
 # Params
 env:
   BUILD_PATH: docker.io/pavelzagalsky
-  SERVICE_NAME: jobnik-ui
-  ACTIONS_STEP_DEBUG: true
+  SERVICE_NAME: jobnik
 
 jobs:
   build:
-    name: Jobnik Frontend Builder
+    name: Jobnik Backend Builder
     runs-on: ubuntu-latest
     steps:
       - name: Getting branch names
@@ -26,18 +25,6 @@ jobs:
         with:
             ref: ${{ steps.branch-names.outputs.current_branch }}
 
-      - name: Print environment variables
-        run: |
-          echo "BUILD_PATH=$BUILD_PATH"
-          echo "SERVICE_NAME=$SERVICE_NAME"
-          echo "GITHUB_EVENT_NAME=${{ github.event_name }}"
-          echo "GITHUB_SHA=${{ github.sha }}"
-
-      - name: Print current directory and installed packages
-        run: |
-          ls -la
-          npm list --depth=0
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -47,64 +34,22 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Set up Node.js and npm
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22'
-
-      - name: Clean node_modules and package-lock.json
-        run: |
-          rm -rf frontend/node_modules
-          rm -f frontend/package-lock.json
-
-      - name: Install dependencies in frontend directory
-        run: |
-          ls -la frontend
-          npm install --prefix ./frontend --no-audit --no-fund --legacy-peer-deps
-          ls -la frontend
-
-      - name: Install Vite globally (if necessary)
-        run: |
-          npm install -g vite
-          ls -la frontend
-
-      - name: Build the frontend
-        run: |
-          echo "Building the frontend"
-          npm run build --prefix ./frontend
-          ls -la frontend/dist
-
-      - name: Install serve globally (if necessary)
-        run: |
-          npm install -g serve
-          ls -la frontend
-
-      - name: Copy built dist to Docker context
-        run: |
-          cp -r frontend/dist ./dist  # Copy dist to the build context directory
-          ls -la ./dist
-
       - name: Build and push docker latest image upon push to master
         if: ${{ github.event_name == 'push' && steps.branch-names.outputs.current_branch == 'master' }}
         run: |
-          cd frontend
+          cd backend
           docker buildx build --push --platform linux/amd64 -t ${{ env.BUILD_PATH }}/${{ env.SERVICE_NAME }}:${{ github.sha }} -f Dockerfile .
           docker buildx build --push --platform linux/amd64 -t ${{ env.BUILD_PATH }}/${{ env.SERVICE_NAME }}:${{ steps.branch-names.outputs.current_branch }}-${{ github.run_number }} -f Dockerfile .
 
       - name: Build and push docker latest image upon workflow dispatch
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
-          cd frontend
+          cd backend
           docker buildx build --push --platform linux/amd64 -t ${{ env.BUILD_PATH }}/${{ env.SERVICE_NAME }}:${{ steps.branch-names.outputs.current_branch }}-${{ github.run_number }} -f Dockerfile .
 
       - name: Deployment summary
         run: |
           echo Branch: ${{ steps.branch-names.outputs.current_branch }}
           echo Service: ${{ env.SERVICE_NAME }}
-
-      - name: Slack Notification
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_MESSAGE: |
-            A new Jobnik app has been built and pushed to Docker Hub.
+          echo Docker Hub: ${{ env.BUILD_PATH }}/${{ env.SERVICE_NAME }}:${{ steps.branch-names.outputs.current_branch }}-${{ github.run_number }}
+          echo Image: ${{ env.SERVICE_NAME }}:${{ steps.branch-names.outputs.current_branch }}-${{ github.run_number }}

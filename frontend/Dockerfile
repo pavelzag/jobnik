@@ -1,31 +1,24 @@
-FROM node:18-alpine AS build
+# Final stage: serve via Node.js
+FROM node:22-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Install dependencies and build
-COPY package*.json ./
-RUN npm ci
-
-COPY . .
-RUN npm run build
-
-# ---------------------------
-# Final stage: serve via Node.js
-# ---------------------------
-FROM node:18-alpine
-
-# Install a static file server
+# Install only the serve package to serve the static files
 RUN npm install -g serve
 
-# Set working directory
-WORKDIR /app
+# Show globally installed npm packages (for debugging)
+RUN npm list -g --depth=0
 
-# Copy built files
-COPY --from=build /app/dist .
+# Show where npm and node are installed
+RUN which npm
+RUN which node
 
-# Expose default serve port
+# Copy the built dist directory from the GitHub Action's build step
+COPY ./dist /app/dist
+
+# Expose the default port for the server
 EXPOSE 3000
 
-# Start the app
-CMD ["serve", "-s", ".", "-l", "3000"]
+# Start the app using serve
+CMD ["serve", "-s", "/app/dist", "-l", "3000"]

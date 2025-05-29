@@ -101,10 +101,3 @@ jobs:
         run: |
           echo Branch: ${{ steps.branch-names.outputs.current_branch }}
           echo Service: ${{ env.SERVICE_NAME }}
-
-      - name: Slack Notification
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_MESSAGE: |
-            A new Jobnik app has been built and pushed to Docker Hub.
