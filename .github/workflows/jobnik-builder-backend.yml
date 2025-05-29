@@ -1,4 +1,4 @@
-name: Jobnik Frontend Builder
+name: Jobnik Backend Builder
 on:
   workflow_dispatch:
   push:
