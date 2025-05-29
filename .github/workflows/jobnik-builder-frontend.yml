@@ -88,13 +88,13 @@ jobs:
         if: ${{ github.event_name == 'push' && steps.branch-names.outputs.current_branch == 'master' }}
         run: |
           cd frontend
-          docker buildx build --push --platform linux/amd64 -t ${{ env.BUILD_PATH }}/${{ env.SERVICE_NAME }}:latest-f Dockerfile .
+          docker buildx build --push --platform linux/arm/v7,linux/arm64,linux/amd64 -t ${{ env.BUILD_PATH }}/${{ env.SERVICE_NAME }}:latest-f Dockerfile .
 
       - name: Build and push docker latest image upon workflow dispatch
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           cd frontend
-          docker buildx build --push --platform linux/amd64 -t ${{ env.BUILD_PATH }}/${{ env.SERVICE_NAME }}:latest -f Dockerfile .
+          docker buildx build --push --platform linux/arm/v7,linux/arm64,linux/amd64 -t ${{ env.BUILD_PATH }}/${{ env.SERVICE_NAME }}:latest -f Dockerfile .
 
       - name: Deployment summary
         run: |
