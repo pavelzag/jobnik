@@ -38,8 +38,7 @@ jobs:
         if: ${{ github.event_name == 'push' && steps.branch-names.outputs.current_branch == 'master' }}
         run: |
           cd backend
-          docker buildx build --push --platform linux/amd64 -t ${{ env.BUILD_PATH }}/${{ env.SERVICE_NAME }}:${{ github.sha }} -f Dockerfile .
-          docker buildx build --push --platform linux/amd64 -t ${{ env.BUILD_PATH }}/${{ env.SERVICE_NAME }}:${{ steps.branch-names.outputs.current_branch }}-${{ github.run_number }} -f Dockerfile .
+          docker buildx build --push --platform linux/amd64 -t ${{ env.BUILD_PATH }}/${{ env.SERVICE_NAME }}:latest -f Dockerfile .
 
       - name: Build and push docker latest image upon workflow dispatch
         if: ${{ github.event_name == 'workflow_dispatch' }}
